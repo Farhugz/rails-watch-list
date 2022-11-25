@@ -1,11 +1,13 @@
 class ListsController < ApplicationController
-  before_action :set_list, only: [:edit, :show, :update]
 
   def index
     @lists = List.all
   end
 
-  def show; end
+  def show
+    @list = List.find(params[:id])
+    @bookmarks = @list.bookmarks
+  end
 
   def new
     @list = List.new
@@ -13,30 +15,21 @@ class ListsController < ApplicationController
 
   def create
     @list = List.new(list_params)
-    if @list.save
-      redirect_to list_path(@list)
-    else
-      render :new
-    end
-  end
 
-  def edit; end
-
-  def update
-    if @list.update(list_params)
-      redirect_to list_path(@list)
-    else
-      render :new
+    respond_to do |format|
+      if @list.save
+        format.html { redirect_to list_url(@list), notice: "list was successfully created." }
+        format.json { render :show, status: :created, location: @list }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @list.errors, status: :unprocessable_entity }
+      end
     end
   end
 
   private
 
-  def set_list
-    @list = List.find(params[:id])
-  end
-
   def list_params
-    params.require(:list).permit(:name, :photo)
+    params.fetch(:list, {}).permit(:name)
   end
 end
